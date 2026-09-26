@@ -4,7 +4,7 @@ This is what happens when logs live on the machines that produce them. Every ser
 
 Services like Datadog Logs, Papertrail, and Grafana Loki exist because every team eventually hits this wall. The idea is straightforward: instead of writing logs to local files, applications push structured log entries to a central service over HTTP. The service stores them, indexes them, and lets you search across everything from one place. It is infrastructure that every team needs and most teams pay for.
 
-Ingestion. Any application sends a POST request to /ingest with a JSON payload — the log level, a message, the service name, a timestamp, and an optional bag of structured metadata. logline validates the payload, checks the API key, and stores it. A single logline instance handles thousands of entries per second using PostgreSQL batch inserts and connection pooling.
+Ingestion. Any application sends a POST request to /ingest with a JSON payload the log level, a message, the service name, a timestamp, and an optional bag of structured metadata. logline validates the payload, checks the API key, and stores it. A single logline instance handles thousands of entries per second using PostgreSQL batch inserts and connection pooling.
 
 ```json
 {
