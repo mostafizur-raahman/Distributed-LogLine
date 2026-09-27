@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -30,18 +31,34 @@ func TestHealthEndpoint(t *testing.T) {
 		t.Errorf("expected Content-Type application/json, got %q", ct)
 	}
 
-	body := strings.TrimSpace(rec.Body.String())
-	if body != `{"status": "ok"}` {
-		t.Errorf("expected body %q, got %q", `{"status": "ok"}`, body)
+	var body statusResponse
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	if body.Status != "ok" {
+		t.Errorf("expected status %q, got %q", "ok", body.Status)
 	}
 }
 
 func TestIngestEndpoint(t *testing.T) {
 	mux := newMux()
 
-	payload := `{"service":"auth","level":"error","message":"connection refused"}`
-	req := httptest.NewRequest(http.MethodPost, "/ingest", strings.NewReader(payload))
+	payload := `{
+		"service": "auth",
+		"level": "error",
+		"message": "connection refused",
+		"timestamp": "2026-09-27T10:00:00Z"
+	}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/ingest",
+		strings.NewReader(payload),
+	)
+
 	req.Header.Set("Content-Type", "application/json")
+
 	rec := httptest.NewRecorder()
 
 	mux.ServeHTTP(rec, req)
@@ -91,10 +108,69 @@ func TestIngestWrongContentType(t *testing.T) {
 	}
 }
 
+func TestIngestValidEntry(t *testing.T) {
+	mux := newMux()
+
+	payload := `{"level":"error","message":"connection refused","service":"auth","timestamp":"2026-02-27T14:30:00Z"}`
+	req := httptest.NewRequest(http.MethodPost, "/ingest", strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Errorf("expected status 201, got %d", rec.Code)
+	}
+}
+
 func TestIngestEmptyBody(t *testing.T) {
 	mux := newMux()
 
 	req := httptest.NewRequest(http.MethodPost, "/ingest", strings.NewReader(""))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected status 400, got %d", rec.Code)
+	}
+}
+
+func TestIngestInvalidJSON(t *testing.T) {
+	mux := newMux()
+
+	req := httptest.NewRequest(http.MethodPost, "/ingest", strings.NewReader("definitely not json"))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected status 400, got %d", rec.Code)
+	}
+}
+
+func TestIngestMissingRequiredFields(t *testing.T) {
+	mux := newMux()
+
+	payload := `{"level":"error"}`
+	req := httptest.NewRequest(http.MethodPost, "/ingest", strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected status 400, got %d", rec.Code)
+	}
+}
+
+func TestIngestInvalidLevel(t *testing.T) {
+	mux := newMux()
+
+	payload := `{"level":"critical","message":"test","service":"api","timestamp":"2026-02-27T14:30:00Z"}`
+	req := httptest.NewRequest(http.MethodPost, "/ingest", strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
