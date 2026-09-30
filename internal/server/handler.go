@@ -34,8 +34,6 @@ func (s *Server) handleIngest(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 
-	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
-
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
