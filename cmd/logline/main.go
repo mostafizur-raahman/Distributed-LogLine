@@ -2,25 +2,32 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
-
+	"log/slog"
 	"logline/internal/config"
 	"logline/internal/server"
+	"os"
 )
 
 func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "configuration error: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("load config: %w", err)
 	}
 	srv := server.New(cfg)
 
 	addr := fmt.Sprintf(":%d", cfg.Port)
-	log.Printf("logline starting on %s (env=%s, log-level=%s)", addr, cfg.Env, cfg.LogLevel)
 
-	if err := srv.Start(addr); err != nil {
-		log.Fatal(err)
-	}
+	slog.Info("logline starting",
+		slog.String("addr", addr),
+		slog.String("env", cfg.Env),
+		slog.String("log-level", cfg.LogLevel),
+	)
+	return srv.Start(addr)
 }
