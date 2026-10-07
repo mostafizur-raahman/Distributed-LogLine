@@ -8,9 +8,12 @@ import (
 )
 
 type Config struct {
-	Port     int
-	Env      string
-	LogLevel string
+	Port        int
+	Env         string
+	LogLevel    string
+	DatabaseURL string
+	DBMaxConns  int
+	DBMaxIdle   int
 }
 
 func LoadConfig() (Config, error) {
