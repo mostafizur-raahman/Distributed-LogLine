@@ -21,7 +21,7 @@ func LoadConfig() (Config, error) {
 		Port:        4000,
 		Env:         "development",
 		LogLevel:    "info",
-		DatabaseURL: "postgres://logline:password@localhost:5433/logline?sslmode=disable",
+		DatabaseURL: "postgres://logline:themostafiz@localhost:5433/logline?sslmode=disable",
 		DBMaxConns:  25,
 		DBMaxIdle:   5,
 	}

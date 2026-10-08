@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
