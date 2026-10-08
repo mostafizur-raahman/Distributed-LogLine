@@ -8,16 +8,22 @@ import (
 )
 
 type Config struct {
-	Port     int
-	Env      string
-	LogLevel string
+	Port        int
+	Env         string
+	LogLevel    string
+	DatabaseURL string
+	DBMaxConns  int
+	DBMaxIdle   int
 }
 
 func LoadConfig() (Config, error) {
 	cfg := Config{
-		Port:     4000,
-		Env:      "development",
-		LogLevel: "info",
+		Port:        4000,
+		Env:         "development",
+		LogLevel:    "info",
+		DatabaseURL: "postgres://logline:themostafiz@localhost:5433/logline?sslmode=disable",
+		DBMaxConns:  25,
+		DBMaxIdle:   5,
 	}
 
 	cfg.loadEnv()

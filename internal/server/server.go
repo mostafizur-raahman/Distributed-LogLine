@@ -3,8 +3,10 @@ package server
 import (
 	"log/slog"
 	"logline/internal/config"
+	"logline/internal/store"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -12,15 +14,16 @@ type Server struct {
 	cfg    config.Config
 	logger *slog.Logger
 	mux    *http.ServeMux
+	store  *store.Store
 }
 
-func New(cfg config.Config) *Server {
-	logger := newLogger(cfg.Env)
+func New(cfg config.Config, logger *slog.Logger, store *store.Store) *Server {
 
 	s := &Server{
 		mux:    http.NewServeMux(),
 		cfg:    cfg,
 		logger: logger,
+		store:  store,
 	}
 
 	s.registerRoutes()
@@ -48,13 +51,12 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("POST /ingest", s.handleIngest)
 }
 
-func newLogger(env string) *slog.Logger {
-	var handler slog.Handler
-
+func NewLogger(env, level string) *slog.Logger {
 	opts := &slog.HandlerOptions{
-		Level: slog.LevelDebug,
+		Level: parseLevel(level),
 	}
 
+	var handler slog.Handler
 	switch env {
 	case "production":
 		handler = slog.NewJSONHandler(os.Stdout, opts)
@@ -66,4 +68,17 @@ func newLogger(env string) *slog.Logger {
 	slog.SetDefault(logger)
 
 	return logger
+}
+
+func parseLevel(s string) slog.Level {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "debug":
+		return slog.LevelDebug
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
 }
