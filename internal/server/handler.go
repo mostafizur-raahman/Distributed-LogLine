@@ -1,17 +1,32 @@
 package server
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"logline/internal/domain"
 )
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	if err := s.store.Ping(ctx); err != nil {
+		s.logger.Error("health check failed: database unreachable",
+			slog.String("error", err.Error()),
+		)
+		writeJSON(w, http.StatusServiceUnavailable, domain.ErrorResponse{
+			Error: "database unreachable",
+		})
+		return
+	}
+
 	writeJSON(w, http.StatusOK, domain.StatusResponse{Status: "ok"})
 }
 

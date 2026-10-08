@@ -18,9 +18,12 @@ type Config struct {
 
 func LoadConfig() (Config, error) {
 	cfg := Config{
-		Port:     4000,
-		Env:      "development",
-		LogLevel: "info",
+		Port:        4000,
+		Env:         "development",
+		LogLevel:    "info",
+		DatabaseURL: "postgres://logline:password@localhost:5433/logline?sslmode=disable",
+		DBMaxConns:  25,
+		DBMaxIdle:   5,
 	}
 
 	cfg.loadEnv()
