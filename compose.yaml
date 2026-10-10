@@ -6,7 +6,7 @@ services:
             - "5433:5432"
         environment:
             POSTGRES_USER: logline
-            POSTGRES_PASSWORD: themostafiz
+            POSTGRES_PASSWORD: password
             POSTGRES_DB: logline
         volumes:
             - pgdata:/var/lib/postgresql/data
