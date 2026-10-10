@@ -84,6 +84,18 @@ func (s *Server) handleIngest(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	if err := s.store.InsertLog(r.Context(), entry); err != nil {
+		logger.Error("failed to insert log entry",
+			slog.String("error", err.Error()),
+			slog.String("service", entry.Service),
+		)
+		writeJSON(w, http.StatusInternalServerError, domain.ErrorResponse{
+			Error: "failed to store log entry",
+		})
+		return
+	}
+
 	logger.Info("log entry accepted",
 		slog.String("service", entry.Service),
 		slog.String("entry_level", entry.Level),
